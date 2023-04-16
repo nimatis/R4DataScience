@@ -1,0 +1,169 @@
+---
+title: "Uebungsblatt_06"
+author: "Nima Timas(12528451) - Sadra Maktabi(12518267)"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Aufgabe 1
+
+### 1a:
+
+```{r}
+sotu <- read.csv("~/R projects/Uebungsblatt_06/data/sotu.csv")
+View(sotu)
+```
+
+### 1b:
+
+```{r}
+# die erste Rede: 1790 George Washington
+# die letzte Rede: 2021 Joseph R Biden
+```
+
+## Aufgabe 2:
+
+### 2a:
+
+```{r}
+library(stringr)
+
+filter(sotu, str_detect(sotu$text, pattern = "the state of the Union is not good"))
+# Theodore Roosevelt
+```
+
+### 2b:
+
+```{r}
+sotu$contains_women <- str_detect(sotu$text, pattern = "women")
+sotu$characters_till_god <- ifelse(str_detect(sotu$text, pattern = "god"), str_locate(sotu$text, "god")[,1] - 1, NA)
+sotu$count_freedom <- str_count(sotu$text, pattern = "freedom")
+sotu$count_justice <- str_count(sotu$text, pattern = "justice")
+sotu$speech_length <- str_length(sotu$text)
+```
+
+### 2c:
+
+```{r}
+library(stringr)
+
+add_speech_features <- function(df) {
+ 
+  df$contains_women <- str_detect(df$text, pattern = "women")
+  df$characters_till_god <- str_locate(df$text, pattern = "god")[, 1] - 1
+  df$count_freedom <- str_count(df$text, pattern = "freedom")
+  df$count_justice <- str_count(df$text, pattern = "justice")
+  df$speech_length <- str_length(df$text)
+  return(df)
+}
+
+sotu_with_features <- add_speech_features(sotu)
+```
+
+## Aufgabe 3
+
+### 3a:
+
+```{r}
+freedom_justice_cor <- cor(sotu$count_freedom, sotu$count_justice)
+freedom_justice_cor
+
+# Es besteht eine leicht negative Zusammenhang zwischen der Anzahl an Nennungen des Wortes "freedom" und des Wortes "justice". Diese Zahl bedeutet, dass eine höhere Häufigkeit des Wortes "freedom" in den States of the Union Ansprachen mit einer geringeren Häufigkeit des Wortes "justice" einhergeht. Diese Korrelation ist jedoch sehr schwach, da sich die beiden Variablen nur geringfügig beeinflussen.
+```
+
+### 3b:
+
+```{r}
+library(ggplot2)
+
+ggplot(sotu, aes(x = count_freedom, y = count_justice)) + 
+  geom_jitter(alpha = 0.3) + 
+  xlab("Anzahl Nennungen von 'freedom'") + 
+  ylab("Anzahl Nennungen von 'justice'")
+```
+
+### 3c:
+
+```{r}
+library(tidyr)
+
+sotu_long <- sotu %>%
+  pivot_longer(cols = c(count_freedom, count_justice),
+               names_to = "variable",
+               values_to = "values")
+
+sotu_long
+```
+
+### 3d:
+
+```{r}
+library(ggplot2)
+
+ggplot(sotu_long, aes(x = year, y = values, color = variable, group = variable)) +
+  geom_line() +
+  ggtitle("Anzahl von 'freedom' and 'justice' in den Reden im laufe der Zeit") +
+  xlab("Jahr") +
+  ylab("Anzahl") +
+  scale_color_discrete(name = "Variable", labels = c("freedom", "justice"))
+```
+
+## Aufgabe 4
+
+### 4a:
+
+```{r}
+sotu_party <- read.csv("~/R projects/Uebungsblatt_06/data/sotu_party.csv")
+View(sotu_party)
+
+library(dplyr)
+sotu_combined <- left_join(sotu, sotu_party, by = "name")
+```
+
+### 4b:
+
+```{r}
+
+# Durchschnittliche Redenlänge
+speech_length_mean <- sotu_combined %>% 
+  group_by(party) %>% 
+  summarize(mean_length = mean(speech_length))
+
+# Partei mit der höchsten durchschnittlichen Redenlänge
+speech_length_mean[which.max(speech_length_mean$mean_length), ]
+```
+
+## Aufgabe 5
+
+### 5a:
+
+```{r}
+inaugural <- read.csv("~/R projects/Uebungsblatt_06/data/inaugural.csv")
+View(inaugural)
+```
+
+```{r}
+inaugural_with_features <- add_speech_features(inaugural)
+```
+
+### 5b:
+```{r}
+inaugural_freedom_justice_cor <- cor(inaugural_with_features$count_freedom, inaugural_with_features$count_justice)
+
+inaugural_freedom_justice_cor
+```
+
+
+## Aufgabe 6
+
+### 6a:
+
+```{r}
+ggplot(data=sotu_with_features, aes(x=year, y=count_freedom, fill=contains_women)) +
+  geom_col() +
+  labs(x="Jahr", y="Anzahl Freedom-Wörter", fill="Frauen erwähnt?") +
+  ggtitle("Entwicklung der Freedom-Wortnutzung in der Rede von US Präsidenten") +
+  scale_fill_manual(values=c("#009E73", "#D55E00")) +
+  theme_minimal()
+```
+
