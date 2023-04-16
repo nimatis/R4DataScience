@@ -1,6 +1,6 @@
 ---
 title: 'Übungsblatt #2'
-author: "Nima Timas(12528451) - Sadra Maktabi(12518267)"
+author: "Nima Timas
 date: "2022-11-26"
 output: html_document
 ---
