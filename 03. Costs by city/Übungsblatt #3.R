@@ -1,0 +1,119 @@
+
+##### Nima Timas(12528451) - Sadra Maktabi(12518267) #####
+##### 2022-12-19 #####
+##### Frohe Weihnachten :) #####
+
+# A1.1
+library(readxl)
+CityData <- read_excel("~/R projects/Ueb_03/Counting the Costs City Data/MASTER_DATA_31.1.2020.xlsx", skip = 1)
+View(CityData)
+
+
+# A1.2
+CityData <- CityData[, !grepl("^\\.\\.\\.", names(CityData))]
+CityData # Der CityData enhält jetzt 33 Columns, vorher 38.
+
+
+# A1.3
+colnames(CityData)[c(6, 7, 8, 9, 11, 12,15, 16, 20, 26, 28, 29, 30, 32, 33)] <- c("avg_HH_size", "num_of_HH","avg_monthly_income_of_LQP",
+                                                                                  "area", "paved_roads", "num_buses","avg_cost_transit_ticket", "tot_transp_cost",
+                                                                               "GDP_per_capita", "total_waste_cost", "avg_home_price", "avg_home_rent",
+                                                                              "tot_housing_cost", "latitute", "longitude")
+
+
+# A1.4
+complete_rows <- CityData[complete.cases(CityData),]  # df von CityData ohne missing values
+nrow(complete_rows) # 129 vollständige Zeilen
+num_missing_rows <- nrow(CityData) - nrow(complete_rows)
+num_missing_rows # 20 Zeilen wurden verloren gehen
+# sum(is.na(CityData))  ---->>>> die gesamte Anzahle der NA_Zellen (missing values)
+# Aus 'Sweden' kommen die missing Values 
+
+############################################################################################################
+
+# A2.1
+library(tidyverse)
+library(dplyr)
+install.packages("gapminder")
+library(gapminder)
+
+by_city_pop_country <- CityData %>% 
+  select(City, Population, Country) %>%  # oder group_by(city, population, country) %>%
+  arrange(desc(Population)) %>%
+  slice(1:100)
+by_city_pop_country
+# größte Bevölkerung: Mumbai, kleinste Bevölkerung: Ocana
+
+
+# A2.2
+CityData$num_buses <- ifelse(is.na(CityData$num_buses), 0, CityData$num_buses)
+CityData %>%
+  filter(
+    Population > 500000,
+    area > 500
+  ) %>%
+  select(Population, area, num_buses) %>%
+  mutate(mean_num_buses = mean(num_buses))
+
+
+# A2.3
+cities <- CityData %>% filter(Country != "Sweden")
+ggplot(cities, aes(x = avg_HH_size, y = Population, color = Country)) +
+  geom_point() +
+  labs(title = "Average Household Size and Population for Cities Not in Sweden",
+       x = "Average Household Size",
+       y = "Population")
+
+##############################################################################################################
+
+# A3.1
+CityData$continent <- case_when(
+  CityData$Country == "Bolivia" ~ "South America",
+  CityData$Country == "Colombia" ~ "South America",
+  CityData$Country == "Sweden" ~ "Europe",
+  CityData$Country == "Malaysia" ~ "Asia",
+  CityData$Country == "India" ~ "Asia"
+)
+
+
+# A3.2
+CityData$paved_roads <- 100 * as.numeric(CityData$paved_roads)
+
+
+# A3.3
+library(dplyr)
+
+CityData <- CityData %>%
+  mutate(avg_HH_members_per_HH = avg_HH_size * num_of_HH)     # ist genauso hoch wie Population
+
+
+# A3.4
+library(dplyr)
+#CityData$paved_roads <- ifelse(is.na(CityData$paved_roads), 0, CityData$paved_roads)
+#CityData$area <- ifelse(is.na(CityData$area), 0, CityData$area)
+CityData <- CityData %>%
+  mutate(road_density = case_when(
+    as.numeric(paved_roads) / as.numeric(area) > 6 ~ "hoch",
+    as.numeric(paved_roads) / as.numeric(area) >= 2 & as.numeric(paved_roads) / as.numeric(area) <= 6 ~ "mittel",
+    as.numeric(paved_roads) / as.numeric(area) < 1 ~ "niedrig"
+  ))
+
+
+# A3.5
+library(dplyr)
+
+CityData <- CityData %>%
+  mutate(Size = recode(Size,
+                       "small" = "klein",
+                       "medium" = "mittel",
+                       "large" = "groß"))
+
+
+
+
+
+
+
+
+
+
