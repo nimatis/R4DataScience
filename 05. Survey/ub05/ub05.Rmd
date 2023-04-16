@@ -1,0 +1,209 @@
+---
+title: "Uebungsblatt_05"
+author: "Nima Timas(12528451) - Sadra Maktabi(12518267)"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Aufgabe 1
+
+### a:
+
+```{r}
+library(readxl)
+panel_wave_2020 <- read_excel("~/R projects/Uebungsblatt_05/data/panel_wave_2020.xlsx")
+View(panel_wave_2020)
+
+library(readxl)
+panel_wave_2022 <- read_excel("~/R projects/Uebungsblatt_05/data/panel_wave_2022.xlsx")
+View(panel_wave_2022)
+```
+
+### b:
+
+```{r}
+library(dplyr)
+
+# Hinzufügen der Variable "year" in panel_wave_2020
+panel_wave_2020 <- panel_wave_2020 %>% mutate(year = 2020)
+
+# Hinzufügen der Variable "year" in panel_wave_2022
+panel_wave_2022 <- panel_wave_2022 %>% mutate(year = 2022)
+```
+
+### c:
+
+```{r}
+panel_wave_2020_2022 <- inner_join(panel_wave_2020, panel_wave_2022, 
+                                   by = "personen_id",
+                                   suffix = c("_2020", "_2022"))
+panel_wave_2020_2022
+```
+
+### d:
+
+```{r}
+panel_wave_2020_2022 <- panel_wave_2020_2022 %>% 
+  mutate(einkommen_diff = einkommen_2022 - einkommen_2020,
+         zufriedenheit_diff = zufriedenheit_2022 - zufriedenheit_2020)
+
+panel_wave_2020_2022
+```
+
+### e:
+
+```{r}
+library(ggplot2)
+
+ggplot(data = panel_wave_2020_2022, aes(x = einkommen_diff, y = zufriedenheit_diff)) +
+  geom_point() + 
+  ggtitle("Veränderung von Zufriedenheit und Einkommen der Befragungspersonen") +
+  xlab("Veränderung von Einkommen") +
+  ylab("Veränderung von Zufriedenheit")
+
+# Visuell kann man noch keine klare Korrelation zwischen den beiden Variablen zu erkennen
+```
+
+### f:
+
+```{r}
+ggplot(data = panel_wave_2020_2022, aes(x = einkommen_diff, y = zufriedenheit_diff, color = familienstand, size = anzahl_kinder)) +
+  geom_point() + 
+  ggtitle("Veränderung von Zufriedenheit und Einkommen der Befragungspersonen") +
+  xlab("Veränderung von Einkommen") +
+  ylab("Veränderung von Zufriedenheit")
+
+# Auf dem Scatterplot zu beobachten ist, dass die verheirateten Personen eine positive Veränderung des Einkommens und der Zufriedenheit aufweisen, während es bei den Ledigen keine bestimmte Tendenz liefert. Es ist jedoch wichtig zu beachten, dass diese Beobachtungen nicht unbedingt kausal sind und es müssen weitere Untersuchungen durchgeführt werden, um die tatsächlichen Zusammenhänge zu verstehen.
+
+# Es kann auch beobachtet werden, dass die Größe der Punkte variiert und das kann darauf hindeuten, dass die Anzahl der Kinder eine Rolle in Veränderungen des Einkommens und der Zufriedenheit spielt.
+```
+
+### g:
+
+```{r}
+all_data <- full_join(panel_wave_2020, panel_wave_2022, by = "personen_id")
+all_data
+
+# Um das Gegenteil zu erreichen,  kann man die Funktion "anti_join" verwenden:
+# all_data <- anti_join(panel_wave_2022, panel_wave_2020, by = "personen_id")
+
+```
+
+# 
+
+## Aufgabe 2
+
+### a:
+
+```{r}
+# "Mutating joins" sind Verknüpfungen, bei denen neue Spalten zum bestehenden Dataframe hinzugefügt werden. Diese Spalten enthalten Informationen aus einem anderen Dataframe, die aufgrund einer Verknüpfungskriterium ausgewählt wurden.
+# "Filtering joins" sind Verknüpfungen, bei denen nur diejenigen Zeilen des bestehenden Dataframes behalten werden, die aufgrund eines Verknüpfungskriteriums ausgewählt wurden. Diese Zeilen enthalten sowohl Informationen aus dem bestehenden Dataframe als auch aus einem anderen Dataframe. 
+```
+
+### b:
+
+```{r}
+produkte_2022 <- data.frame(produkt_id = c(1000:1006),
+                 preis = c(2,3.3,1,2.7,5.0,2.0,10),
+                 im_sortiment_seit = c(1999,2021,2020,2020,2020,2019,2018),
+                 bestand = c(14,200,5,0,18,27,31),
+                 verkäufe_2022 = c(25,80,1,45,102,12,60),
+                 einkaufspreis = c(1,2.5,0.7,2,4.3,1.3,7))
+aussortiert_2023 <- data.frame(produkt_id = c(1001,1005))
+```
+
+### c:
+
+```{r}
+library(dplyr)
+produkte_2023 <- semi_join(produkte_2022, aussortiert_2023, by = "produkt_id")
+produkte_2023
+```
+
+### d:
+
+```{r}
+preis_mean <- mean(produkte_2023$preis)
+preis_median <- median(produkte_2023$preis)
+preis_sd <- sd(produkte_2023$preis)
+preis_IQR <- IQR(produkte_2023$preis)
+
+# Der Mittelwert des Preises ist 4.14 und der Median ist 2.7, was darauf hindeutet, dass die meisten Produkte im mittleren Preisbereich liegen. Der Standardabweichung ist 3.87, was darauf hindeutet, dass die Preise der Produkte stark variieren. Der Interquartilsabstand ist 3.3, was darauf hindeutet, dass es eine breite Streuung der Preise gibt.
+
+
+bestand_mean <- mean(produkte_2023$bestand)
+bestand_median <- median(produkte_2023$bestand)
+bestand_sd <- sd(produkte_2023$bestand)
+bestand_IQR <- IQR(produkte_2023$bestand)
+
+# Der Mittelwert des Bestands ist 33.57 und der Median ist 27, was darauf hindeutet, dass die meisten Produkte einen mittleren Lagerbestand haben. Der Standardabweichung ist 32.06, was darauf hindeutet, dass die Lagerbestände der Produkte stark variieren. Der Interquartilsabstand ist 31, was darauf hindeutet, dass es eine breite Streuung der Lagerbestände gibt.
+```
+
+### e:
+
+```{r}
+# Ein "Full join" führt alle Datensätze aus beiden Dataframes zusammen und fügt "NA" für fehlende Werte hinzu. Ein "Semi join" behält nur die Zeilen des ersten Dataframes, die aufgrund eines Verknüpfungskriteriums ausgewählt wurden. Ein Beispiel dafür wäre, die Daten von Kunden mit ihren Bestellungen zusammenzuführen.
+```
+
+# 
+
+## Aufgabe 3
+
+### a:
+
+```{r}
+personen <- data.frame(name = c("Petra","Omar","Jerry","Tomas","Janine"),
+                       alter = c(54,33,81,19,24))
+interessen <- data.frame(name = c("Jerry","Petra","Janine","Tomas","Omar"),
+                       sport = c(T,T,T,T,F),
+                       politik = c(F,F,F,T,F),
+                       musik = c(T,F,F,T,T))
+```
+
+```{r}
+# Das Problem bei dieser Operation ist, dass die Reihenfolge der Datensätze in den beiden Dataframes nicht übereinstimmt. Da die Operation die Spalten aneinanderhängt, werden die Datensätze in der falschen Reihenfolge zusammengeführt und die Informationen zu einer Person werden nicht richtig zugeordnet. Das Verwenden von cbind() oder rbind() kann zu Fehlern führen, wenn die Reihenfolge der Datensätze in den Dataframes nicht übereinstimmt. 
+```
+
+### b:
+
+```{r}
+# Die Spaltennamen müssen in beiden Dataframes übereinstimmen, falls nicht, sollten die Spaltennamen in beiden Dataframes angepasst werden. Außerdem müssen die Datensätze in beiden Dataframes in der gleichen Reihenfolge vorliegen.
+
+
+# die Spaltennamen überprüfen
+colnames(personen)
+colnames(interessen)
+
+# die Spaltennamen änderen
+colnames(interessen) <- c("name","sport","politik","musik")
+
+# die Dataframes nach der Spalte "name" sortieren
+personen <- personen[order(personen$name),]
+interessen <- interessen[order(interessen$name),]
+
+# cbind() ausführen
+result <- cbind(personen, interessen[,2:4])
+```
+
+### c:
+
+```{r}
+library(dplyr)
+personen_interessen <- inner_join(personen, interessen, by = "name")
+
+personen_interessen
+```
+
+### d:
+
+```{r}
+library(ggplot2)
+
+ggplot(data = personen_interessen, aes(x=sport, y=alter, fill=sport)) +
+  geom_boxplot() +
+  ggtitle("Verteilung des Alters nach Interesse an Sport") +
+  xlab("Interesse an Sport") +
+  ylab("Alter")
+
+#  Es ist zu sehen, dass die Mehrheit der Personen Interesse an Sport haben, unabhängig vom Alter. Es ist jedoch zu beachten, dass das Alter nur ein Faktor von vielen sein kann, der das Interesse beeinflusst und weitere Untersuchungen notwendig sind um die Zusammenhänge genauer zu verstehen.
+```
