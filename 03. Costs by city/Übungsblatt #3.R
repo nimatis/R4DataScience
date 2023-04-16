@@ -1,5 +1,5 @@
 
-##### Nima Timas(12528451) - Sadra Maktabi(12518267) #####
+##### Nima Timas #####
 ##### 2022-12-19 #####
 ##### Frohe Weihnachten :) #####
 
