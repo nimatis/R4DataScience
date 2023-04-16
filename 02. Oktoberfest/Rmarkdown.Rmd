@@ -1,0 +1,110 @@
+---
+title: 'Übungsblatt #2'
+author: "Nima Timas(12528451) - Sadra Maktabi(12518267)"
+date: "2022-11-26"
+output: html_document
+---
+
+# Übungsblatt 2
+
+### Einführung in die statistische Software für NF
+
+# 
+
+# Aufgabe 2
+
+```{r}
+# a, b --> Load packages from the tidyverse and load the dataset using read_csv
+library(tidyverse)
+oktoberfest <- read_csv("data/oktoberfest_daten.csv")
+```
+
+```{r}
+# c --> get the first 7 rows
+head(oktoberfest, 7)
+```
+
+```{r}
+# d
+sapply(oktoberfest,class)
+
+```
+
+```{r}
+# e
+# csv files geeignet sind um große Datenmenge zu organisieren und auch lassen sich einfacher in eine Tabellenkalkulation oder eine andere Speicherdatenbank importieren
+```
+
+# Aufgabe 3
+
+```{r}
+# a
+oktoberfest %>%
+  group_by(jahr, dauer)
+ggplot(oktoberfest, aes(
+  x = jahr,
+  y = dauer
+)) +
+  geom_col() +
+  theme_classic()
+  
+### die häufigste Dauer des Oktoberfests beträgt 16 Tage.
+```
+
+```{r}
+# b
+ggplot(oktoberfest, aes(
+  x = jahr,
+  y = besucher_gesamt,
+  color = jahr_mit_landwirtschaftsfest,
+  alpha = bier_konsum
+)) +
+  geom_point() +
+  labs(title = "Die Anzahl der Besucher des Oktoberfests", subtitle = "Wieviele haben den Oktoberfest über verschiedenen Jahren besucht?", caption = "Source: Landeshauptstadt München") +
+  theme(plot.title = element_text(face = "bold"),
+        plot.caption = element_text(colour = "blue"))
+  
+```
+
+# Aufgabe 4
+
+```{r}
+# a
+ggplot(oktoberfest, aes(
+  x = jahr,
+  y = bier_preis
+)) +
+  geom_line() +
+  theme_gray()
+```
+
+```{r}
+# b
+ggplot(oktoberfest, aes(
+  x = jahr,
+  y = bier_konsum
+)) +
+  geom_line() +
+  labs(title = "der Bier-Konsum auf dem Oktoberfest", subtitle = "Wieviel Bier haben die Oktoberfest-besucher konsumiert?") +
+  theme_light()
+```
+
+```{r}
+# c
+ggplot(oktoberfest, aes(
+  x = bier_preis,
+  y = bier_konsum,
+  size = besucher_tag
+)) +
+  geom_point() +
+  scale_x_log10() +
+  labs(title = "In welchem Verhältnis stehen Bierpreis und Bierkonsum?", caption = "Source: Landeshauptstadt München") +
+  theme(plot.title = element_text(face = "bold", colour = "#965FA0"),
+        plot.caption = element_text(colour = "#965BFA"))
+  
+```
+
+```{r}
+# d
+# Gemäß obiger Grafik stellt sich die Frage, warum mit steigendem Bierpreis auch dessen Konsum steigt? Obwohl die Grafik eine direkte Beziehung zwischen ihnen zeigt, ist es nicht logisch, dass mit steigendem Bierpreis auch sein Verbrauch steigt. Vermutlich spielen noch weitere Faktoren bei der Steigerung des Bierkonsums eine Rolle, die hier nicht dargestellt sind. Anscheinend hängen diese zwei Faktoren nicht miteinander zusammen.
+```
