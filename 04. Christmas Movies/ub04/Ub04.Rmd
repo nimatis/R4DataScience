@@ -1,0 +1,334 @@
+---
+title: "Ubungsblatt_04"
+author: "Nima Timas(12528451) - Sadra Maktabi(12518267)"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Aufgabe 1
+
+### a:
+
+```{r}
+library(readxl)
+imdb <- read_excel("~/R projects/Uebungsblatt_04/data/imdb_christmas_movies_2017-22.xlsx")
+View(imdb)  
+```
+
+### b:
+
+```{r}
+imdb <- imdb[, !(names(imdb) %in% c("URL", "url"))]
+```
+
+### c:
+
+```{r}
+names(imdb) <- tolower(names(imdb))
+```
+
+### d:
+
+```{r}
+library(tidyr)
+
+imdb <- separate(imdb, time, c("time_num", "time_unit"), sep = " ")
+
+imdb$time_num <- as.numeric(imdb$time_num)
+```
+
+### e:
+
+```{r}
+unique(imdb$time_unit)   
+# Nein, außer 'min' gibt keine andere Einheit
+```
+
+### f:
+
+```{r}
+# as.numeric() konvertiert ein Objekt in eine numerische Spalte. Sie gibt eine Warnung aus, wenn das Objekt nicht vollständig in eine numerische Spalte konvertiert werden kann, und setzt die ungültigen Werte in NA. Im Gegensatz zu as.numeric(), gibt parse_number() jedoch keine Warnungen aus und setzt ungültige Werte einfach auf NA, anstatt sie zu ignorieren.
+
+# Ein weiterer Unterschied dazwischen, die parse_number() Funktion kann numerische Werte in Textform automatisch zu konvertieren. as.numeric() hingegen kann solche Werte nicht automatisch konvertieren und gibt eine Warnung aus.
+```
+
+### g:
+
+```{r}
+library(readr)
+columns_to_convert <- c("release_year", "stars", "score", "votes")
+
+imdb[columns_to_convert] <- lapply(imdb[columns_to_convert], parse_number)
+```
+
+### h:
+
+```{r}
+#library(tidyr)
+
+imdb <- imdb %>%
+  separate(genre, c("genre1", "genre2", "genre3"), sep = ", ", fill = "right")
+```
+
+### i:
+
+```{r}
+#install.packages("knitr")
+#library(knitr)
+#kable(imdb[1:10, ], format = "html")
+```
+
+# 
+
+## Aufgabe 2
+
+### a:
+
+```{r}
+library(dplyr)
+
+max_stars <- imdb %>%
+  arrange(desc(stars)) %>%
+  head(10) %>%
+  select(movie_title, stars)
+
+max_stars
+```
+
+### b:
+
+```{r}
+library(dplyr)
+
+max_stars_by_year <- imdb %>%
+  group_by(release_year) %>%
+  summarise(title = first(movie_title), stars = first(max(stars)))
+
+max_stars_by_year
+```
+
+### c:
+
+```{r}
+# die Anzahl an Filmen für jede Genrekombination
+genre_counts <- imdb %>%
+  count(genre1, genre2) %>%
+  arrange(desc(n))
+
+genre_counts
+
+# die häufigste Genrekombination
+genre_counts[1, ]  # Drama
+```
+
+### d:
+
+```{r}
+# die durchschnittliche Sternebewertung für jede Genrekombination
+genre_mean_stars <- imdb %>%
+  group_by(genre1, genre2) %>%
+  summarise(mean_stars = mean(stars)) %>%
+  arrange(desc(mean_stars))
+
+genre_mean_stars
+
+# die Genrekombination mit der höchsten durchschnittlichen Sternebewertung
+genre_mean_stars[1, ]  # Animation, Adventure
+```
+
+### e:
+
+```{r}
+# nur anhand der durchschnittlichen Sternebewertung ist schwierig zu sagen, ob eine bestimmte Genrekombination erfolgreicher ist als andere. Dazu kommen noch viele andere Faktoren ins Spiel, die den Erfolg eines Films beeinflussen, nicht nur das Genre. Es wäre hilfreich, weitere Informationen zu berücksichtigen.
+```
+
+# 
+
+## Aufgabe 3
+
+### a:
+
+```{r}
+imdb_long <- imdb %>%
+  pivot_longer(cols = genre1:genre3, names_to = "genre_type", values_to = "genre")
+
+head(imdb_long)
+```
+
+### b:
+
+```{r}
+genre_na_filtered <- imdb_long %>%
+  filter(!is.na(genre))
+```
+
+### c:
+
+```{r}
+genre_counts <- genre_na_filtered %>%
+  group_by(genre) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+genre_counts
+```
+
+### d:
+
+```{r}
+# das häufigste Genre ist Romance
+# Die Anzahl der Filme vom Genre Romance: 190
+```
+
+### e:
+
+```{r}
+genre_stats <- genre_na_filtered %>%
+  group_by(genre) %>%
+  summarise(count = n(),
+            mean_stars = mean(stars),
+            median_stars = median(stars)) %>%
+  filter(count >= 10) %>%
+  arrange(median_stars)
+
+genre_stats
+```
+
+### f:
+
+```{r}
+# Music ist das Genre mit dem höchsten Median an Sternebwertung
+# Adventure ist das Genre mit dem niedrigsten Median an Sternebwertung
+```
+
+# 
+
+## Aufgabe 4
+
+### a:
+
+```{r}
+library(ggplot2)
+
+ggplot(imdb, aes(x = stars, y = score)) +
+  geom_point() +
+  xlab("Sternebewertungen") +
+  ylab("Metacritic Scores") +
+  ggtitle("Korrelation zwischen Sternebewertungen und Metacritic Scores")
+
+# Der Plot zeigt, dass es eine leichte positive Korrelation zwischen den Sternebewertungen und den Metacritic Scores gibt, d.h. Filme mit höheren Sternebewertungen tendieren dazu, auch höhere Metacritic Scores zu haben. 
+```
+
+### b:
+
+```{r}
+ggplot(imdb, aes(x = votes, y = mean(stars))) +
+  geom_point() +
+  xlab("Anzahl an Bewertungen") +
+  ylab("Durchschnittliche Sternebewertung") +
+  ggtitle("Korrelation zwischen Anzahl an Bewertungen und durchschnittlicher Sternebewertung")
+```
+
+### c:
+
+```{r}
+# der Film mit der höchsten Anzahl an Bewertungen wird hier ein 'Outlier' genannt.
+```
+
+### d:
+
+```{r}
+yearly_reviews <- imdb %>%
+  group_by(release_year) %>%
+  summarise(total_votes = sum(votes))
+
+ggplot(yearly_reviews, aes(x = release_year, y = total_votes)) +
+  geom_point()
+
+# Im Jahr 2019 gab es die meisten Bewertungen
+```
+
+### e:
+
+```{r}
+yearly_reviews <- imdb %>%
+  group_by(release_year) %>%
+  filter(votes == max(votes)) %>%
+  summarise(total_votes = sum(votes))
+
+ggplot(yearly_reviews, aes(x = release_year, y = total_votes)) +
+  geom_point()
+
+# Ja das Jahr mit den meisten Bewertungen bleibt gleich
+```
+
+# 
+
+## Aufgabe 5
+
+### a:
+
+```{r}
+ggplot(data = imdb, aes(x = release_year, y = stars)) +
+  geom_point()
+```
+
+### b:
+
+```{r}
+ggplot(data = imdb) + 
+  geom_jitter(aes(x = release_year, y = votes))
+```
+
+### c:
+
+```{r}
+# Der Hauptunterschied zwischen geom_point und geom_jitter ist, dass geom_point Punkte in einem Scatterplot an der exakten Stelle anzeigt, an der sie in den Daten vorkommen, während geom_jitter die Punkte zufällig innerhalb einer vorgegebenen Bandbreite um ihre tatsächliche Stelle herum positioniert. Dies hilft, Overplotting zu vermeiden, indem es sicherstellt, dass Punkte, die sich an der gleichen Stelle befinden, nicht übereinandergelegt werden. 
+```
+
+### d:
+
+```{r}
+library(dplyr)
+
+imdb %>%
+  group_by(release_year) %>%
+  summarise(median_stars = median(stars)) %>%
+  ggplot(aes(x = release_year, median_stars)) +
+  geom_line()
+```
+
+### e:
+
+```{r}
+imdb %>%
+  group_by(release_year) %>%
+  summarise(median_stars = median(stars), n_movies = n()) %>%
+  ggplot(aes(x = release_year, y = n_movies)) +
+  geom_point()
+```
+
+### f:
+
+```{r}
+# Wenn hier das Ziel ist es, dass die Verteilung der Sternebewertungen über die Jahre hinweg zu untersuchen, dann wäre vermutlich der Scatterplot mit geom_jitter eine gute Wahl, da er die Verteilung der Sternebewertungen besser darstellt als der Scatterplot mit geom_point. Der Linienplot mit dem Mittelwert der Sternebewertungen könnte ebenfalls nützlich sein, um die allgemeine Tendenz der Sternebewertungen über die Jahre hinweg zu zeigen, aber er würde nicht so viel über die Verteilung der Sternebewertungen aussagen. Der Scatterplot, der die Anzahl an Filmen pro Jahr skaliert, wäre möglicherweise weniger nützlich, da die Größe der Punkte nicht direkt mit der Sternebewertung zusammenhängt.
+```
+
+# 
+
+## Aufgabe 6
+
+### a:
+
+```{r}
+
+duration_by_year <- imdb %>%
+  group_by(release_year) %>%
+  summarise(mean_duration = mean(time_num), n_movies = n())
+
+ggplot(duration_by_year, aes(x = release_year, y = mean_duration, color = n_movies)) +
+  geom_line() +
+  labs(title = "Average Duration of Movies by Release Year",
+       x = "Release Year",
+       y = "Average Duration (minutes)")
+```
